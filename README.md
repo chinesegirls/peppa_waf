@@ -1,5 +1,6 @@
-# peppa_waf
-一个练手的waf，就叫佩奇吧， an open source waf  (Web Application Firewalls)  base on tengine
+# peppa_waf ：an open source waf (Web Application Firewalls) base on tengine
+
+一个练手的waf，就叫佩奇吧
 
 #sudo apt-get install libpcre3 libpcre3-dev openssl libssl-dev
 
