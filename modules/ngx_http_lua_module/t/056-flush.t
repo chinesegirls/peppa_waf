@@ -4,7 +4,6 @@ BEGIN {
     $ENV{TEST_NGINX_POSTPONE_OUTPUT} = 1;
 }
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 #worker_connections(1014);
@@ -43,7 +42,7 @@ hiya
 --- no_error_log
 [error]
 --- error_log
-lua reuse free buf memory 13 >= 5
+lua reuse free buf chain, but reallocate memory because 5 >= 0
 
 
 
@@ -521,4 +520,3 @@ qr/lua flush requires waiting: buffered 0x[0-9a-f]+, delayed:1/,
 --- no_error_log
 [error]
 --- timeout: 4
-

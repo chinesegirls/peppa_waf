@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 use t::StapThread;
 
@@ -424,4 +423,3 @@ attempt to abort with pending subrequests
 --- no_error_log
 [alert]
 [warn]
-

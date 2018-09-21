@@ -10,6 +10,7 @@
 
 
 #include "ngx_http_lua_common.h"
+#include "ngx_http_lua_api.h"
 
 
 #ifndef NGX_UNESCAPE_URI_COMPONENT
@@ -18,13 +19,6 @@
 
 
 #ifndef NGX_LUA_NO_FFI_API
-typedef struct {
-    int          len;
-    /* this padding hole on 64-bit systems is expected */
-    u_char      *data;
-} ngx_http_lua_ffi_str_t;
-
-
 typedef struct {
     ngx_http_lua_ffi_str_t   key;
     ngx_http_lua_ffi_str_t   value;
@@ -82,8 +76,15 @@ extern char ngx_http_lua_headers_metatable_key;
      : (c) == NGX_HTTP_LUA_CONTEXT_CONTENT ? "content_by_lua*"               \
      : (c) == NGX_HTTP_LUA_CONTEXT_LOG ? "log_by_lua*"                       \
      : (c) == NGX_HTTP_LUA_CONTEXT_HEADER_FILTER ? "header_filter_by_lua*"   \
+     : (c) == NGX_HTTP_LUA_CONTEXT_BODY_FILTER ? "body_filter_by_lua*"       \
      : (c) == NGX_HTTP_LUA_CONTEXT_TIMER ? "ngx.timer"                       \
      : (c) == NGX_HTTP_LUA_CONTEXT_INIT_WORKER ? "init_worker_by_lua*"       \
+     : (c) == NGX_HTTP_LUA_CONTEXT_BALANCER ? "balancer_by_lua*"             \
+     : (c) == NGX_HTTP_LUA_CONTEXT_SSL_CERT ? "ssl_certificate_by_lua*"      \
+     : (c) == NGX_HTTP_LUA_CONTEXT_SSL_SESS_STORE ?                          \
+                                                 "ssl_session_store_by_lua*" \
+     : (c) == NGX_HTTP_LUA_CONTEXT_SSL_SESS_FETCH ?                          \
+                                                 "ssl_session_fetch_by_lua*" \
      : "(unknown)")
 
 
@@ -114,16 +115,20 @@ ngx_http_lua_ffi_check_context(ngx_http_lua_ctx_t *ctx, unsigned flags,
 
 
 #define ngx_http_lua_check_fake_request(L, r)                                \
-    if ((r)->connection->fd == -1) {                                         \
+    if ((r)->connection->fd == (ngx_socket_t) -1) {                          \
         return luaL_error(L, "API disabled in the current context");         \
     }
 
 
 #define ngx_http_lua_check_fake_request2(L, r, ctx)                          \
-    if ((r)->connection->fd == -1) {                                         \
+    if ((r)->connection->fd == (ngx_socket_t) -1) {                          \
         return luaL_error(L, "API disabled in the context of %s",            \
                           ngx_http_lua_context_name((ctx)->context));        \
     }
+
+
+#define ngx_http_lua_ssl_get_ctx(ssl_conn)                                   \
+    SSL_get_ex_data(ssl_conn, ngx_http_lua_ssl_ctx_index)
 
 
 lua_State *ngx_http_lua_init_vm(lua_State *parent_vm, ngx_cycle_t *cycle,
@@ -194,7 +199,7 @@ ngx_http_lua_co_ctx_t *ngx_http_lua_create_co_ctx(ngx_http_request_t *r,
     ngx_http_lua_ctx_t *ctx);
 
 ngx_int_t ngx_http_lua_run_posted_threads(ngx_connection_t *c, lua_State *L,
-    ngx_http_request_t *r, ngx_http_lua_ctx_t *ctx);
+    ngx_http_request_t *r, ngx_http_lua_ctx_t *ctx, ngx_uint_t nreqs);
 
 ngx_int_t ngx_http_lua_post_thread(ngx_http_request_t *r,
     ngx_http_lua_ctx_t *ctx, ngx_http_lua_co_ctx_t *coctx);
@@ -216,6 +221,8 @@ void ngx_http_lua_finalize_fake_request(ngx_http_request_t *r,
 
 void ngx_http_lua_close_fake_connection(ngx_connection_t *c);
 
+void ngx_http_lua_free_fake_request(ngx_http_request_t *r);
+
 void ngx_http_lua_release_ngx_ctx_table(ngx_log_t *log, lua_State *L,
     ngx_http_lua_ctx_t *ctx);
 
@@ -230,10 +237,16 @@ ngx_int_t ngx_http_lua_report(ngx_log_t *log, lua_State *L, int status,
 
 int ngx_http_lua_do_call(ngx_log_t *log, lua_State *L);
 
+ngx_http_cleanup_t *ngx_http_lua_cleanup_add(ngx_http_request_t *r,
+    size_t size);
 
-#define ngx_http_lua_check_if_abortable(L, ctx)                             \
-    if ((ctx)->no_abort) {                                                  \
-        return luaL_error(L, "attempt to abort with pending subrequests");  \
+void ngx_http_lua_cleanup_free(ngx_http_request_t *r,
+    ngx_http_cleanup_pt *cleanup);
+
+
+#define ngx_http_lua_check_if_abortable(L, ctx)                              \
+    if ((ctx)->no_abort) {                                                   \
+        return luaL_error(L, "attempt to abort with pending subrequests");   \
     }
 
 
@@ -266,7 +279,7 @@ ngx_http_lua_create_ctx(ngx_http_request_t *r)
     ngx_http_set_ctx(r, ctx, ngx_http_lua_module);
 
     llcf = ngx_http_get_module_loc_conf(r, ngx_http_lua_module);
-    if (!llcf->enable_code_cache && r->connection->fd != -1) {
+    if (!llcf->enable_code_cache && r->connection->fd != (ngx_socket_t) -1) {
         lmcf = ngx_http_get_module_main_conf(r, ngx_http_lua_module);
 
         dd("lmcf: %p", lmcf);
@@ -353,7 +366,7 @@ ngx_http_lua_set_globals_table(lua_State *L)
 }
 
 
-#define ngx_http_lua_hash_literal(s)                                        \
+#define ngx_http_lua_hash_literal(s)                                         \
     ngx_http_lua_hash_str((u_char *) s, sizeof(s) - 1)
 
 
@@ -414,6 +427,36 @@ ngx_http_lua_get_flush_chain(ngx_http_request_t *r, ngx_http_lua_ctx_t *ctx)
 
     return cl;
 }
+
+
+#if (nginx_version < 1011002)
+static ngx_inline in_port_t
+ngx_inet_get_port(struct sockaddr *sa)
+{
+    struct sockaddr_in   *sin;
+#if (NGX_HAVE_INET6)
+    struct sockaddr_in6  *sin6;
+#endif
+
+    switch (sa->sa_family) {
+
+#if (NGX_HAVE_INET6)
+    case AF_INET6:
+        sin6 = (struct sockaddr_in6 *) sa;
+        return ntohs(sin6->sin6_port);
+#endif
+
+#if (NGX_HAVE_UNIX_DOMAIN)
+    case AF_UNIX:
+        return 0;
+#endif
+
+    default: /* AF_INET */
+        sin = (struct sockaddr_in *) sa;
+        return ntohs(sin->sin_port);
+    }
+}
+#endif
 
 
 extern ngx_uint_t  ngx_http_lua_location_hash;

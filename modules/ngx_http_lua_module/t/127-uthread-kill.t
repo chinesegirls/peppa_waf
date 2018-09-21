@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 use t::StapThread;
 
@@ -191,7 +190,7 @@ resolve name done: -2
 
 === TEST 4: kill pending connect
 --- config
-    resolver $TEST_NGINX_RESOLVER;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     location /lua {
         content_by_lua '
             local ready = false
@@ -506,4 +505,3 @@ thread created: zombie
 [alert]
 lua tcp socket abort resolver
 --- error_log
-

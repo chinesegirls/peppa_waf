@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 #worker_connections(1014);
@@ -9,7 +8,7 @@ use Test::Nginx::Socket::Lua;
 
 repeat_each(2);
 
-plan tests => repeat_each() * (blocks() * 3 + 34);
+plan tests => repeat_each() * (blocks() * 3 + 46);
 
 #no_diff();
 no_long_string();
@@ -531,7 +530,7 @@ Hellofoo, baz
 
 
 
-=== TEST 27: get non-existant header
+=== TEST 27: get non-existent header
 --- config
     location /lua {
         content_by_lua '
@@ -547,7 +546,7 @@ nil
 
 
 
-=== TEST 28: get non-existant header
+=== TEST 28: get non-existent header
 --- config
     location /lua {
         content_by_lua '
@@ -1152,10 +1151,23 @@ foo: 32
         content_by_lua '
             ngx.header["Foo"] = "bar"
             ngx.header["Bar"] = "baz"
-            ngx.say("Foo: ", ngx.resp.get_headers()["Foo"] or "nil")
-            ngx.say("foo: ", ngx.resp.get_headers()["foo"] or "nil")
-            ngx.say("Bar: ", ngx.resp.get_headers()["Bar"] or "nil")
-            ngx.say("bar: ", ngx.resp.get_headers()["bar"] or "nil")
+            local headers, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
+            ngx.say("Foo: ", headers["Foo"] or "nil")
+            ngx.say("foo: ", headers["foo"] or "nil")
+            ngx.say("Bar: ", headers["Bar"] or "nil")
+
+            headers, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
+            ngx.say("bar: ", headers["bar"] or "nil")
         ';
     }
 --- request
@@ -1168,6 +1180,8 @@ Foo: bar
 foo: bar
 Bar: baz
 bar: baz
+--- no_error_log
+[error]
 
 
 
@@ -1177,8 +1191,15 @@ bar: baz
         content_by_lua '
             ngx.header["Foo"] = "bar"
             ngx.header["Bar"] = "baz"
+
+            local headers, err = ngx.resp.get_headers(nil, true)
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
             local h = {}
-            for k, v in pairs(ngx.resp.get_headers(nil, true)) do
+            for k, v in pairs(headers) do
                 h[k] = v
             end
             ngx.say("Foo: ", h["Foo"] or "nil")
@@ -1207,10 +1228,17 @@ bar: nil
             ngx.header["Foo"] = "bar"
             ngx.header["Foo"] = nil
             ngx.header["Bar"] = "baz"
-            ngx.say("Foo: ", ngx.resp.get_headers()["Foo"] or "nil")
-            ngx.say("foo: ", ngx.resp.get_headers()["foo"] or "nil")
-            ngx.say("Bar: ", ngx.resp.get_headers()["Bar"] or "nil")
-            ngx.say("bar: ", ngx.resp.get_headers()["bar"] or "nil")
+
+            local headers, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
+            ngx.say("Foo: ", headers["Foo"] or "nil")
+            ngx.say("foo: ", headers["foo"] or "nil")
+            ngx.say("Bar: ", headers["Bar"] or "nil")
+            ngx.say("bar: ", headers["bar"] or "nil")
         ';
     }
 --- request
@@ -1227,7 +1255,6 @@ bar: baz
 
 
 === TEST 60: built-in Content-Type header
---- main_config
 --- config
     location = /t {
         content_by_lua '
@@ -1235,7 +1262,12 @@ bar: baz
         ';
 
         header_filter_by_lua '
-            local hs = ngx.resp.get_headers()
+            local hs, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
             print("my Content-Type: ", hs["Content-Type"])
             print("my content-type: ", hs["content-type"])
             print("my content_type: ", hs["content_type"])
@@ -1256,7 +1288,6 @@ my content_type: text/plain
 
 
 === TEST 61: built-in Content-Length header
---- main_config
 --- config
     location = /t {
         content_by_lua '
@@ -1264,7 +1295,12 @@ my content_type: text/plain
         ';
 
         header_filter_by_lua '
-            local hs = ngx.resp.get_headers()
+            local hs, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
             print("my Content-Length: ", hs["Content-Length"])
             print("my content-length: ", hs["content-length"])
             print("my content_length: ", hs.content_length)
@@ -1285,7 +1321,6 @@ my content_length: 3
 
 
 === TEST 62: built-in Connection header
---- main_config
 --- config
     location = /t {
         content_by_lua '
@@ -1293,7 +1328,12 @@ my content_length: 3
         ';
 
         header_filter_by_lua '
-            local hs = ngx.resp.get_headers()
+            local hs, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
             print("my Connection: ", hs["Connection"])
             print("my connection: ", hs["connection"])
         ';
@@ -1312,7 +1352,6 @@ my connection: close
 
 
 === TEST 63: built-in Transfer-Encoding header (chunked)
---- main_config
 --- config
     location = /t {
         content_by_lua '
@@ -1320,7 +1359,12 @@ my connection: close
         ';
 
         body_filter_by_lua '
-            local hs = ngx.resp.get_headers()
+            local hs, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
             print("my Transfer-Encoding: ", hs["Transfer-Encoding"])
             print("my transfer-encoding: ", hs["transfer-encoding"])
             print("my transfer_encoding: ", hs.transfer_encoding)
@@ -1340,7 +1384,6 @@ my transfer-encoding: chunked
 
 
 === TEST 64: built-in Transfer-Encoding header (none)
---- main_config
 --- config
     location = /t {
         content_by_lua '
@@ -1348,7 +1391,12 @@ my transfer-encoding: chunked
         ';
 
         body_filter_by_lua '
-            local hs = ngx.resp.get_headers()
+            local hs, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
             print("my Transfer-Encoding: ", hs["Transfer-Encoding"])
             print("my transfer-encoding: ", hs["transfer-encoding"])
             print("my transfer_encoding: ", hs.transfer_encoding)
@@ -1404,3 +1452,250 @@ Location: http://test.com/foo/bar
 --- no_error_log
 [error]
 
+
+
+=== TEST 67: ngx.header["Content-Type"] with ngx_gzip
+--- config
+    gzip             on;
+    gzip_min_length  1;
+    location = /test2 {
+        content_by_lua '
+            ngx.header["Content-Type"] = "text/html; charset=utf-8"
+            ngx.say("test")
+        ';
+    }
+--- request
+GET /test2
+--- more_headers
+Accept-Encoding: gzip
+--- response_headers
+Content-Encoding: gzip
+Content-Type: text/html; charset=utf-8
+--- response_body_like chomp
+[^[:ascii:]]+
+--- no_error_log
+[error]
+
+
+
+=== TEST 68: ngx.header["Content-Type"] with "; blah"
+--- config
+    location = /test2 {
+        content_by_lua '
+            ngx.header["Content-Type"] = "; blah"
+            ngx.say("test")
+        ';
+    }
+--- request
+GET /test2
+--- response_headers
+!Content-Encoding
+Content-Type: ; blah
+--- response_body
+test
+--- no_error_log
+[error]
+
+
+
+=== TEST 69: return the matched content-type instead of default_type
+--- http_config
+types {
+    image/png png;
+}
+--- config
+location /set/ {
+     default_type text/html;
+     content_by_lua_block {
+       ngx.say(ngx.header["content-type"])
+   }
+}
+--- request
+GET /set/hello.png
+--- response_headers
+Content-Type: image/png
+--- response_body
+image/png
+--- no_error_log
+[error]
+
+
+
+=== TEST 70: always return the matched content-type
+--- config
+    location /set/ {
+        default_type "image/png";
+        content_by_lua_block {
+            ngx.say(ngx.header["content-type"])
+            ngx.say(ngx.header["content-type"])
+        }
+    }
+--- request
+GET /set/hello.png
+--- response_headers
+Content-Type: image/png
+--- response_body
+image/png
+image/png
+--- no_error_log
+[error]
+
+
+
+=== TEST 71: return the matched content-type after ngx.resp.get_headers()
+--- http_config
+types {
+    image/png png;
+}
+--- config
+    location /set/ {
+        default_type text/html;
+        content_by_lua_block {
+            local h, err = ngx.resp.get_headers()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
+
+            ngx.say(h["content-type"])
+        }
+    }
+--- request
+GET /set/hello.png
+--- response_headers
+Content-Type: image/png
+--- response_body
+image/png
+--- no_error_log
+[error]
+
+
+
+=== TEST 72: exceeding max header limit (default 100)
+--- config
+    location /resp-header {
+        content_by_lua_block {
+            for i = 1, 99 do
+                ngx.header["Foo" .. i] = "Foo"
+            end
+
+            local headers, err = ngx.resp.get_headers()
+            if err then
+                ngx.say("err: ", err)
+            end
+
+            local cnt = 0
+            for k, v in pairs(headers) do
+                cnt = cnt + 1
+            end
+
+            ngx.say("found ", cnt, " resp headers");
+        }
+    }
+--- request
+GET /resp-header
+--- response_body
+err: truncated
+found 100 resp headers
+--- no_error_log
+[error]
+--- log_level: debug
+--- error_log
+lua exceeding response header limit 101 > 100
+
+
+
+=== TEST 73: NOT exceeding max header limit (default 100)
+--- config
+    location /resp-header {
+        content_by_lua_block {
+            for i = 1, 98 do
+                ngx.header["Foo" .. i] = "Foo"
+            end
+
+            local headers, err = ngx.resp.get_headers()
+            if err then
+                ngx.say("err: ", err)
+            end
+
+            local cnt = 0
+            for k, v in pairs(headers) do
+                cnt = cnt + 1
+            end
+
+            ngx.say("found ", cnt, " resp headers");
+        }
+    }
+--- request
+GET /resp-header
+--- response_body
+found 100 resp headers
+--- no_error_log
+[error]
+lua exceeding response header limit
+--- log_level: debug
+
+
+
+=== TEST 74: exceeding max header limit (custom limit, 3)
+--- config
+    location /resp-header {
+        content_by_lua_block {
+            for i = 1, 2 do
+                ngx.header["Foo" .. i] = "Foo"
+            end
+
+            local headers, err = ngx.resp.get_headers(3)
+            if err then
+                ngx.say("err: ", err)
+            end
+
+            local cnt = 0
+            for k, v in pairs(headers) do
+                cnt = cnt + 1
+            end
+
+            ngx.say("found ", cnt, " resp headers");
+        }
+    }
+--- request
+GET /resp-header
+--- response_body
+err: truncated
+found 3 resp headers
+--- no_error_log
+[error]
+--- error_log
+lua exceeding response header limit 4 > 3
+--- log_level: debug
+
+
+
+=== TEST 75: NOT exceeding max header limit (custom limit, 3)
+--- config
+    location /resp-header {
+        content_by_lua_block {
+            for i = 1, 1 do
+                ngx.header["Foo" .. i] = "Foo"
+            end
+
+            local headers, err = ngx.resp.get_headers(3)
+            if err then
+                ngx.say("err: ", err)
+            end
+
+            local cnt = 0
+            for k, v in pairs(headers) do
+                cnt = cnt + 1
+            end
+
+            ngx.say("found ", cnt, " resp headers");
+        }
+    }
+--- request
+GET /resp-header
+--- response_body
+found 3 resp headers
+--- no_error_log
+[error]
+lua exceeding response header limit

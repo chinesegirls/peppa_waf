@@ -59,15 +59,15 @@
  * length(Instruction) = 4 or 8
  * little endian or big endian
 */
-#define    LUA_LITTLE_ENDIAN_4BYTES_CODE                                \
+#define    LUA_LITTLE_ENDIAN_4BYTES_CODE                                     \
     "\x24\x00\x00\x00\x1e\x00\x00\x01\x1e\x00\x80\x00"
-#define    LUA_LITTLE_ENDIAN_8BYTES_CODE                                \
-    "\x24\x00\x00\x00\x00\x00\x00\x00\x1e\x00\x00\x01"                  \
+#define    LUA_LITTLE_ENDIAN_8BYTES_CODE                                     \
+    "\x24\x00\x00\x00\x00\x00\x00\x00\x1e\x00\x00\x01"                       \
     "\x00\x00\x00\x00\x1e\x00\x80\x00\x00\x00\x00\x00"
-#define    LUA_BIG_ENDIAN_4BYTES_CODE                                   \
+#define    LUA_BIG_ENDIAN_4BYTES_CODE                                        \
     "\x00\x00\x00\x24\x01\x00\x00\x1e\x00\x08\x00\x1e"
-#define    LUA_BIG_ENDIAN_8BYTES_CODE                                   \
-    "\x00\x00\x00\x00\x00\x00\x00\x24\x00\x00\x00\x00"                  \
+#define    LUA_BIG_ENDIAN_8BYTES_CODE                                        \
+    "\x00\x00\x00\x00\x00\x00\x00\x24\x00\x00\x00\x00"                       \
     "\x01\x00\x00\x1e\x00\x00\x00\x00\x00\x08\x00\x1e"
 #define    LUA_LITTLE_ENDIAN_4BYTES_CODE_LEN        (4 + 4 + 4)
 #define    LUA_LITTLE_ENDIAN_8BYTES_CODE_LEN        (8 + 8 + 8)
@@ -93,14 +93,14 @@
  * | Char              | Number of upvalues referenced by this function
  * | [nups]            |
  * ---------------------
- * | Char              | Number of paramters of this function
+ * | Char              | Number of parameters of this function
  * | [numparams]       |
  * ---------------------
  * | Char              | Does this function has variable number of arguments?
  * | [is_var_arg]      | main function always set to VARARG_ISVARARG (2)
  * ---------------------
  * | Char              | Maximum stack size this function used
- * | [maxstacksize]    | Intially set to 2
+ * | [maxstacksize]    | Initially set to 2
  * ---------------------
  * | Vector(instr)     | Code instructions of this function
  * | [code]            |
@@ -156,8 +156,8 @@
 #define    POS_MAX_STACK_SIZE      (POS_IS_VAR_ARG + sizeof(char))
 #define    POS_NUM_OF_INST         (POS_MAX_STACK_SIZE +sizeof(char))
 #define    POS_BYTECODE            (POS_NUM_OF_INST + sizeof(int))
-#define    MAX_BEGIN_CODE_SIZE                                              \
-    (POS_BYTECODE + LUA_LITTLE_ENDIAN_8BYTES_CODE_LEN                       \
+#define    MAX_BEGIN_CODE_SIZE                                               \
+    (POS_BYTECODE + LUA_LITTLE_ENDIAN_8BYTES_CODE_LEN                        \
     + sizeof(int) + sizeof(int))
 #define    MAX_END_CODE_SIZE       (sizeof(int) + sizeof(int) + sizeof(int))
 
@@ -177,7 +177,7 @@
  * | Char              | F(ffi) | V(vararg)| C(has internal funcs)
  * | [func flag]       |
  * ---------------------
- * | Char              | Number of paramters of this function
+ * | Char              | Number of parameters of this function
  * | [numparams]       |
  * ---------------------
  * | Char              |
@@ -225,24 +225,24 @@
 
 /* bytecode for luajit 2.0 */
 
-#define    LJ20_LITTLE_ENDIAN_CODE_STRIPPED                             \
-    "\x14\x03\x00\x01\x00\x01\x00\x03"                                  \
-    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                  \
+#define    LJ20_LITTLE_ENDIAN_CODE_STRIPPED                                  \
+    "\x14\x03\x00\x01\x00\x01\x00\x03"                                       \
+    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                       \
     "\x00\x00"
 
-#define    LJ20_BIG_ENDIAN_CODE_STRIPPED                                \
-    "\x14\x03\x00\x01\x00\x01\x00\x03"                                  \
-    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                  \
+#define    LJ20_BIG_ENDIAN_CODE_STRIPPED                                     \
+    "\x14\x03\x00\x01\x00\x01\x00\x03"                                       \
+    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                       \
     "\x00\x00"
 
-#define    LJ20_LITTLE_ENDIAN_CODE                                      \
-    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                              \
-    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                  \
+#define    LJ20_LITTLE_ENDIAN_CODE                                           \
+    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                                   \
+    "\x31\x00\x00\x00\x30\x00\x00\x80\x48\x00\x02\x00"                       \
     "\x00\x00"
 
-#define    LJ20_BIG_ENDIAN_CODE                                         \
-    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                              \
-    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                  \
+#define    LJ20_BIG_ENDIAN_CODE                                              \
+    "\x15\x03\x00\x01\x00\x01\x00\x03\x00"                                   \
+    "\x00\x00\x00\x31\x80\x00\x00\x30\x00\x02\x00\x48"                       \
     "\x00\x00"
 
 /* bytecode for luajit 2.1 */
@@ -368,7 +368,7 @@ ngx_http_lua_clfactory_bytecode_prepare(lua_State *L,
         dd("==LJ_BT_HEADER==");
         size_t i;
         for (i = 0; i < LJ_HEADERSIZE; i++) {
-            dd("%ld: 0x%02X", i, (unsigned)(u_char)lf->begin_code.str[i]);
+            dd("%ld: 0x%02X", i, (unsigned)(u_char) lf->begin_code.str[i]);
         }
         dd("==LJ_BT_HEADER_END==");
         }
@@ -471,7 +471,7 @@ ngx_http_lua_clfactory_bytecode_prepare(lua_State *L,
         dd("==LUA_BT_HEADER==");
         size_t i;
         for (i = 0; i < LUAC_HEADERSIZE; i++) {
-            dd("%ld, 0x%02X", i, (unsigned)(u_char)lf->begin_code.str[i]);
+            dd("%ld, 0x%02X", i, (unsigned)(u_char) lf->begin_code.str[i]);
         }
         dd("==LUA_BT_HEADER_END==");
         }
@@ -498,7 +498,7 @@ ngx_http_lua_clfactory_bytecode_prepare(lua_State *L,
                     sizeof(size_t) + sizeof(int) * 2);
         /* number of upvalues */
         *(lf->begin_code.str + POS_NUM_OF_UPVS) = 0;
-        /* number of paramters */
+        /* number of parameters */
         *(lf->begin_code.str + POS_NUM_OF_PARA) = 0;
         /* is var-argument function? */
         *(lf->begin_code.str + POS_IS_VAR_ARG) = 2;

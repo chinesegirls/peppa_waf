@@ -1,5 +1,4 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 #worker_connections(1014);
@@ -441,6 +440,7 @@ done
     location /main {
         content_by_lua '
             package.loaded.foo = nil
+            collectgarbage()
 
             local res = ngx.location.capture("/t")
             if res.status == 200 then
@@ -583,13 +583,13 @@ matched: []
 --- response_body
 1234
 1234
-nil
+false
 1234
-nil
+false
 abcd
-nil
+false
 abcd
-nil
+false
 abcd
 
 
@@ -815,7 +815,7 @@ exec opts: 0
 
 === TEST 30: just hit match limit
 --- http_config
-    lua_regex_match_limit 5600;
+    lua_regex_match_limit 5000;
 --- config
     location /re {
         content_by_lua_file html/a.lua;
@@ -861,7 +861,7 @@ error: pcre_exec() failed: -8
 
 === TEST 31: just not hit match limit
 --- http_config
-    lua_regex_match_limit 5700;
+    lua_regex_match_limit 5100;
 --- config
     location /re {
         content_by_lua_file html/a.lua;
@@ -902,4 +902,3 @@ end
     GET /re
 --- response_body
 failed to match
-

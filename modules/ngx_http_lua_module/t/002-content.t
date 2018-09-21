@@ -1,5 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
-use lib 'lib';
+
 use Test::Nginx::Socket::Lua;
 
 #worker_connections(1014);
@@ -10,7 +10,7 @@ use Test::Nginx::Socket::Lua;
 repeat_each(2);
 #repeat_each(1);
 
-plan tests => repeat_each() * (blocks() * 2 + 19);
+plan tests => repeat_each() * (blocks() * 2 + 23);
 
 #no_diff();
 #no_long_string();
@@ -539,6 +539,9 @@ GET /main
 Content-Length: 12
 --- response_body chop
 hello, world
+--- no_error_log
+[error]
+[alert]
 
 
 
@@ -761,6 +764,9 @@ Content-Length: 13
 hello,
 world
 --- timeout: 5
+--- no_error_log
+[error]
+[alert]
 
 
 
@@ -836,4 +842,3 @@ GET /lua
 --- error_code: 500
 --- error_log eval
 qr/failed to load inlined Lua code: /
-

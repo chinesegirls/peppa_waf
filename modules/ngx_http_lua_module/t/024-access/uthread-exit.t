@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 use t::StapThread;
 
@@ -503,7 +502,7 @@ after
             ngx.say("after")
             local sock = ngx.socket.tcp()
             sock:settimeout(12000)
-            local ok, err = sock:connect("106.187.41.147", 12345)
+            local ok, err = sock:connect("172.105.207.225", 12345)
             if not ok then
                 ngx.say("failed to connect: ", err)
                 return
@@ -1312,4 +1311,3 @@ free request
 end
 --- error_log
 attempt to abort with pending subrequests
-

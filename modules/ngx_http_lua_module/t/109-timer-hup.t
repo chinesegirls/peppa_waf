@@ -12,7 +12,6 @@ BEGIN {
     }
 }
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua $SkipReason ? (skip_all => $SkipReason) : ();
 
 
@@ -501,4 +500,3 @@ ok
 --- grep_error_log_out
 lua found 8191 pending timers
 --- timeout: 20
-

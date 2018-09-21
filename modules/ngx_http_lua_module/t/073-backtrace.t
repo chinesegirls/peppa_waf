@@ -1,5 +1,4 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 #worker_connections(1014);
@@ -188,4 +187,3 @@ probe process("$LIBLUA_PATH").function("lua_concat") {
 :79: in function 'func20'
 :83: in function 'func21'
 ...
-

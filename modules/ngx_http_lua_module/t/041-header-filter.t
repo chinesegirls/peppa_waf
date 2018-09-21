@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 #worker_connections(1014);
@@ -255,7 +254,11 @@ uid: 33
 
         header_filter_by_lua '
             local str = "";
-            local args = ngx.req.get_uri_args()
+            local args, err = ngx.req.get_uri_args()
+            if err then
+                ngx.log(ngx.ERR, "err: ", err)
+                return ngx.exit(500)
+            end
             local keys = {}
             for key, val in pairs(args) do
                 table.insert(keys, key)
@@ -791,4 +794,3 @@ GET /t
 --- error_code: 302
 --- no_error_log
 [error]
-

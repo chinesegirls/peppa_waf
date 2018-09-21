@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 #worker_connections(1014);
@@ -850,7 +849,7 @@ ok
     "lua_package_path '$::HtmlDir/?.lua;./?.lua';"
 --- config
     location /t {
-        resolver $TEST_NGINX_RESOLVER;
+        resolver $TEST_NGINX_RESOLVER ipv6=off;
         set $myhost 'agentzh.org.';
         proxy_pass http://$myhost/misc/.vimrc;
     }
@@ -1019,4 +1018,3 @@ write timer set: 1
 --- no_error_log
 [error]
 [alert]
-

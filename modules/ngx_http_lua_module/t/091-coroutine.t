@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 repeat_each(2);
@@ -161,7 +160,7 @@ cc3: 2
 
 === TEST 3: basic coroutine and cosocket
 --- config
-    resolver $TEST_NGINX_RESOLVER;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     location /lua {
         content_by_lua '
             function worker(url)
@@ -360,7 +359,7 @@ GET /lua
 
 === TEST 7: coroutine wrap and cosocket
 --- config
-    resolver $TEST_NGINX_RESOLVER;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     location /lua {
         content_by_lua '
             function worker(url)
@@ -988,7 +987,7 @@ test10
 --- http_config
     init_by_lua 'return';
 --- config
-    resolver $TEST_NGINX_RESOLVER;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     location /lua {
         content_by_lua '
             function worker(url)
@@ -1042,7 +1041,7 @@ successfully connected to: agentzh.org
     init_by_lua_file html/init.lua;
 
 --- config
-    resolver $TEST_NGINX_RESOLVER;
+    resolver $TEST_NGINX_RESOLVER ipv6=off;
     location /lua {
         content_by_lua '
             function worker(url)
@@ -1316,4 +1315,3 @@ co yield: 2
 
 --- no_error_log
 [error]
-

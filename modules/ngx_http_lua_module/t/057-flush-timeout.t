@@ -21,7 +21,6 @@ BEGIN {
     $ENV{TEST_NGINX_POSTPONE_OUTPUT} = 1;
 }
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 use t::StapThread;
 
@@ -319,4 +318,3 @@ qr/failed to flush: client aborted/,
 --- timeout: 0.2
 --- abort
 --- wait: 1
-

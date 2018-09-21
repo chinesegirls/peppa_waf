@@ -1,5 +1,4 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 use t::StapThread;
 
@@ -1396,4 +1395,3 @@ registered timer
 lua ngx.timer expired
 http lua close fake http connection
 trace: [m][f][g]
-

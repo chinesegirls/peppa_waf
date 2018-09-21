@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 use t::StapThread;
 
@@ -187,4 +186,3 @@ free request
 --- error_code: 302
 --- no_error_log
 [error]
-

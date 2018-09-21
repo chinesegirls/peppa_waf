@@ -1,6 +1,5 @@
 # vim:set ft= ts=4 sw=4 et fdm=marker:
 
-use lib 'lib';
 use Test::Nginx::Socket::Lua;
 
 repeat_each(2);
@@ -1330,4 +1329,3 @@ this exposed a memory leak in receiveuntil
 ok
 --- no_error_log
 [error]
-
