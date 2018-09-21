@@ -10,10 +10,14 @@
 
 #cd LuaJIT-2.1.0 && make && make install
 
+#echo "/usr/local/lib" >> /etc/ld.so.conf
+
+#ldconfig
+
 先安装 luajit
 
 然后安装tengine
 
-./configure --prefix=/usr/local/nginx --with-http_lua_module --with-luajit-lib=/usr/local/lib/ --with-luajit-inc=/usr/local/include/luajit-2.1/ --with-lua-inc=/usr/local/include/luajit-2.1/ 
+#./configure --prefix=/usr/local/nginx --with-http_lua_module --with-luajit-lib=/usr/local/lib/ --with-luajit-inc=/usr/local/include/luajit-2.1/ --with-lua-inc=/usr/local/include/luajit-2.1/ 
 
-make && make install
+#make && make install
