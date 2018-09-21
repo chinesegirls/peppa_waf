@@ -1,7 +1,9 @@
 # peppa_waf
 一个练手的waf，就叫佩奇吧， an open source waf  (Web Application Firewalls)  base on tengine
 
-# yum install pcre pcre-devel openssl openssl-devel
+# sudo apt-get install libpcre3 libpcre3-dev openssl libssl-dev
+
+# yum install pcre pcre-devel openssl openssl-devel zlib-devel 
 
 # cd LuaJIT-2.1.0 && make && make install
 
