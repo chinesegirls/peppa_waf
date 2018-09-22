@@ -1,7 +1,13 @@
 # peppa_waf ：
 
 #### an open source waf (Web Application Firewalls) base on Tengine-2.2.2 and luajit2.1.0，jemalloc-5.1.0
-一个练手的waf，就叫peppa_waf吧
+计划包括如下模块：
+
+1，规则处理引擎：加载规则并实时分析处理请求
+2，联动模块： 与前置waf,cdn联动,与防火墙联动
+3，数据收集模块：统计业务metrics，收集结构化日志
+4，数据分析模块：分析并确定关键指标
+5，数据展示模块：图形展示关键指标
 
 #sudo apt-get install libpcre3 libpcre3-dev openssl wget libssl-dev
 
